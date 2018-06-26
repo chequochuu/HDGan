@@ -153,7 +153,7 @@ class Sent2FeatMap(nn.Module):
         super(Sent2FeatMap, self).__init__()
         self.__dict__.update(locals())
         out_dim = row*col*channel
-        norm_layer = functools.partial(nn.BatchNorm2d, affine=True)
+        norm_layer = functools.partial(nn.BatchNorm1d, affine=True)
         _layers = [nn.Linear(in_dim, out_dim)]
         _layers += [norm_layer(out_dim)]
         if activ is not None:
@@ -423,3 +423,4 @@ class GeneratorSuperL1Loss(nn.Module):
         pwloss =  F.l1_loss(output_512, up_img_256)
 
         return output_64, output_128, output_256, output_512, pwloss
+
