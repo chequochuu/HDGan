@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import ipdb
 import sys
 import torch
 import torch.optim as optim
@@ -196,6 +197,7 @@ def train_gans(dataset, model_root, model_name, netG, netD, args):
         train_sampler = iter(dataset[0]) 
         test_sampler = iter(dataset[1])
 
+        #ipdb.set_trace()
         netG.train()
         netD.train()
         for it in range(updates_per_epoch):

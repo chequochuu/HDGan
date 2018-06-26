@@ -3,7 +3,7 @@ name='HDGAN_256'
 dataset='birds'
 dir='../../Models/'${name}_$dataset
 mkdir -v $dir
-CUDA_VISIBLE_DEVICES=${device} python train_worker.py \
+CUDA_VISIBLE_DEVICES=${device} python3 train_worker.py \
                                 --dataset $dataset \
                                 --batch_size 10 \
                                 --model_name ${name} \

@@ -161,6 +161,8 @@ class Sent2FeatMap(nn.Module):
         self.out = nn.Sequential(*_layers)
 
     def forward(self, inputs):
+        import ipdb
+        ipdb.set_trace()
         output = self.out(inputs)
         output = output.view(-1, self.channel, self.row, self.col)
         return output
