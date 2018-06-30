@@ -1,13 +1,15 @@
+#import ipdb
 try:
     from visdom import Visdom
 except:
     print('Better install visdom')
+import ipdb
 import numpy as np
 import random
 import scipy.misc
 from scipy.misc import imsave
 from .local_utils import imshow, writeImg, normalize_img
-_port = 43426
+_port = 80#43426
 print('-'*60)
 print('Launch python -m visdom.server -port {} to monitor'.format(_port))
 print('-'*60)
@@ -78,7 +80,7 @@ class plot_scalar(object):
             Y=values,
             win=self.name,
             update='append',
-            opts=dict(title=self.name, legend=None),
+       #     opts=dict(title=self.name, legend=None),
             env=self.env
         )
 
@@ -88,7 +90,7 @@ class plot_scalar(object):
                 Y=values,
                 win=self.name,
                 env=self.env,
-                opts=dict(title=self.name, legend=None)
+       #         opts=dict(title=self.name, legend=None)
             )
 
         self.reset()

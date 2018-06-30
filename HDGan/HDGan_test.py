@@ -159,7 +159,7 @@ def test_gans(dataset, model_root, mode_name, save_root , netG,  args):
 def drawCaption(img, caption, level=['output 64', 'output 128', 'output 256']):
     img_txt = Image.fromarray(img)
     # get a font
-    fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 40)
+    fnt = ImageFont.truetype('/usr/share/fonts/truetype/freefont/FreeMono.ttf', 40)
     # get a drawing context
     d = ImageDraw.Draw(img_txt)
 
