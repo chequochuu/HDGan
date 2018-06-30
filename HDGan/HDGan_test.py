@@ -45,7 +45,10 @@ def test_gans(dataset, model_root, mode_name, save_root , netG,  args):
     ## TODO note that strict is set to false for now. It is a bit risky
     netG.load_state_dict(weights_dict, strict=False)
 
-    testing_z = torch.FloatTensor(args.batch_size, args.noise_dim).normal_(0, 1)
+    testing_z = torch.FloatTensor( args.noise_dim).normal_(0, 1)
+args.batch_size,
+    tup = tuple(testing_z.reshape(1,-1) for i in range(args.batch_size))
+    testing_z = np.concatenate(tup, 0)
     testing_z = to_device(testing_z)
 
     num_examples = dataset._num_examples

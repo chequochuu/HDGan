@@ -33,3 +33,5 @@ demo/text_encoder/*
 .remote-sync.json
 test.py
 __deprecated/*
+.tags
+Models/*

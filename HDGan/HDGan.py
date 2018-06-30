@@ -110,7 +110,7 @@ def train_gans(dataset, model_root, model_name, netG, netD, args):
 
     model_folder = os.path.join(model_root, model_name)
     if not os.path.exists(model_folder):
-        os.makedirs(model_folder)
+        os.makedirs(model_folder, exist_ok=True)
 
     #-------------load model from  checkpoint---------------------------#
     if args.reuse_weights:
