@@ -159,7 +159,7 @@ args.batch_size,
 #-----------------------------------------------------------------------------------------------#
 #  drawCaption and save_super_images is modified from https://github.com/hanzhanggit/StackGAN   #
 #-----------------------------------------------------------------------------------------------#
-def drawCaption(img, caption, level=['output 64', 'output 128', 'output 256']):
+def drawCaption(img, caption, level=['output 16', 'output 32', 'output 64']):
     img_txt = Image.fromarray(img)
     # get a font
     fnt = ImageFont.truetype('/usr/share/fonts/truetype/freefont/FreeMono.ttf', 40)

@@ -22,7 +22,7 @@ from HDGan.fuel.datasets import Dataset
 
 
 datadir = os.path.join(data_root, 'coco')
-finest_size = 256
+finest_size = 64
 num_emb = 4
 batch_size = 128
 

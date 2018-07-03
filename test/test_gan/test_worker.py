@@ -36,7 +36,7 @@ if  __name__ == '__main__':
                         help='which dataset to use [birds or flowers]') 
     parser.add_argument('--noise_dim', type=int, default=100, metavar='N',
                         help='the dimension of noise.')
-    parser.add_argument('--finest_size', type=int, default=256, metavar='N',
+    parser.add_argument('--finest_size', type=int, default=64, metavar='N',
                         help='target image size.')
     parser.add_argument('--test_sample_num', type=int, default=None, 
                         help='The number of runs for each embeddings when testing')

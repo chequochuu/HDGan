@@ -13,7 +13,7 @@ from functools import partial
 from .datasets_basic import resize_images
 
 
-def img_loader_func(img_names, imgpath=None, img_size=256):
+def img_loader_func(img_names, imgpath=None, img_size=64):
     res = []
 
     for i_n in img_names:
@@ -34,7 +34,7 @@ class Dataset(object):
         if img_size in [256, 512]:
             self.output_res = [64, 128, 256]
             if img_size == 512: self.output_res += [512]
-        elif img_size in [64]:
+        elif img_size in [16,32,64]:
             self.output_res = [64]
 
         self.embedding_filename = '/char-CNN-RNN-embeddings.pickle'

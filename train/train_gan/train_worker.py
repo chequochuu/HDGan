@@ -42,9 +42,9 @@ if __name__ == '__main__':
                         help='number of resblock in generator')
     parser.add_argument('--epoch_decay', type=float, default=100,
                         help='decay learning rate by half every epoch_decay')
-    parser.add_argument('--finest_size', type=int, default=256,
+    parser.add_argument('--finest_size', type=int, default=64,
                         metavar='N', help='target image size.')
-    parser.add_argument('--init_256generator_from', type=str,  default='')
+    parser.add_argument('--init_64generator_from', type=str,  default='')
     parser.add_argument('--maxepoch', type=int, default=600, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--g_lr', type=float, default=0.0002, metavar='LR',

@@ -26,7 +26,7 @@ def load_data_from_h5(fullpath, h5_file):
         for i in range(data.shape[0]):
             img = data[i]
             # import pdb; pdb.set_trace()
-            assert((img.shape[0] in [256, 128, 64, 512]) and img.shape[2] == 3)
+            assert((img.shape[0] in [16, 32, 64]) and img.shape[2] == 3)
             if not (img.min() >= 0 and img.max() <= 255 and img.mean() > 1):
                 print ('WARNING {}, min {}, max {}, mean {}'.format(i, img.min(), img.max(), img.mean()))
                 continue	

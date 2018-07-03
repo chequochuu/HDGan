@@ -61,6 +61,17 @@ class ImageDown(torch.nn.Module):
         activ = nn.LeakyReLU(0.2, True)
 
         _layers = []
+        if input_size == 16:
+            cur_dim = 128
+            _layers += [conv_norm(num_chan, cur_dim, norm_layer, stride=2, activation=activ, use_norm=False)]  # 8
+            _layers += [conv_norm(cur_dim, out_dim, norm_layer, stride=2, activation=activ)]  # 4
+
+        if input_size == 32:
+            cur_dim = 128
+            _layers += [conv_norm(num_chan, cur_dim, norm_layer, stride=2, activation=activ, use_norm=False)]  # 16
+            _layers += [conv_norm(cur_dim, cur_dim*2, norm_layer, stride=2, activation=activ)]  # 8
+            _layers += [conv_norm(cur_dim*2, out_dim, norm_layer, stride=2, activation=activ)]  # 4
+
         # use large kernel_size at the end to prevent using zero-padding and stride
         if input_size == 64:
             cur_dim = 128
@@ -171,7 +182,7 @@ class Sent2FeatMap(nn.Module):
 #----------------Define Generator and Discriminator-----------------------------#
 
 class Generator(nn.Module):
-    def __init__(self, sent_dim, noise_dim, emb_dim, hid_dim, num_resblock=1, side_output_at=[64, 128, 256]):
+    def __init__(self, sent_dim, noise_dim, emb_dim, hid_dim, num_resblock=1, side_output_at=[16, 32, 64]):
         """
         Parameters:
         ----------
@@ -201,9 +212,9 @@ class Generator(nn.Module):
         self.side_output_at = side_output_at
 
         # feature map dimension reduce at which resolution
-        reduce_dim_at = [8, 32, 128, 256]
+        reduce_dim_at = [8, 32]
         # different scales for all networks
-        num_scales = [4, 8, 16, 32, 64, 128, 256]
+        num_scales = [4, 8, 16, 32, 64]
 
         cur_dim = self.hid_dim*8
         for i in range(len(num_scales)):
@@ -242,7 +253,7 @@ class Generator(nn.Module):
         Returns:
         ----------
         out_dict: dictionary
-            dictionary containing the generated images at scale [64, 128, 256]
+            dictionary containing the generated images at scale [16, 32 , 64]
         kl_loss: tensor
             Kullback–Leibler divergence loss from conditionining embedding
         """
@@ -254,22 +265,15 @@ class Generator(nn.Module):
         x_4 = self.scale_4(x)
         x_8 = self.scale_8(x_4)
         x_16 = self.scale_16(x_8)
+        output_16 = self.tensor_to_img_16(x_16)
         x_32 = self.scale_32(x_16)
+        output_32 = self.tensor_to_img_32(x_32)
 
         # skip 4x4 feature map to 32 and send to 64
         x_64 = self.scale_64(x_32)
         output_64 = self.tensor_to_img_64(x_64)
 
-        # skip 8x8 feature map to 64 and send to 128
-        x_128 = self.scale_128(x_64)
-        output_128 = self.tensor_to_img_128(x_128)
-
-        # skip 16x16 feature map to 128 and send to 256
-        out_256 = self.scale_256(x_128)
-        self.keep_out_256 = out_256
-        output_256 = self.tensor_to_img_256(out_256)
-
-        return output_64, output_128, output_256, mean, logsigma
+        return output_16, output_32, output_64, mean, logsigma
 
 
 class Discriminator(torch.nn.Module):
@@ -296,6 +300,19 @@ class Discriminator(torch.nn.Module):
         self.side_output_at = side_output_at
 
         enc_dim = hid_dim * 4  # the ImageDown output dimension
+        if 16 in side_output_at:  # discriminator for 16 input
+            self.img_encoder_16 = ImageDown(16,  num_chan,  enc_dim)  # 4x4
+            self.pair_disc_16 = DiscClassifier(enc_dim, emb_dim, kernel_size=4)
+            self.local_img_disc_16 = nn.Conv2d(enc_dim, 1, kernel_size=4, padding=0, bias=True)
+            _layers = [nn.Linear(sent_dim, emb_dim), activ]
+            self.context_emb_pipe_16 = nn.Sequential(*_layers)
+
+        if 32 in side_output_at:  # discriminator for 32 input
+            self.img_encoder_32 = ImageDown(32,  num_chan,  enc_dim)  # 4x4
+            self.pair_disc_32 = DiscClassifier(enc_dim, emb_dim, kernel_size=4)
+            self.local_img_disc_32 = nn.Conv2d(enc_dim, 1, kernel_size=4, padding=0, bias=True)
+            _layers = [nn.Linear(sent_dim, emb_dim), activ]
+            self.context_emb_pipe_32 = nn.Sequential(*_layers)
 
         if 64 in side_output_at:  # discriminator for 64 input
             self.img_encoder_64 = ImageDown(64,  num_chan,  enc_dim)  # 4x4
@@ -343,7 +360,7 @@ class Discriminator(torch.nn.Module):
         '''
         out_dict = OrderedDict()
         this_img_size = images.size()[3]
-        assert this_img_size in [32, 64, 128, 256], 'wrong input size {} in image discriminator'.format(this_img_size)
+        assert this_img_size in [16, 32, 64], 'wrong input size {} in image discriminator'.format(this_img_size)
 
         img_encoder = getattr(self, 'img_encoder_{}'.format(this_img_size))
         local_img_disc = getattr(
@@ -366,61 +383,4 @@ class Discriminator(torch.nn.Module):
         return pair_disc_out, local_img_disc_out
 
 
-
-class GeneratorSuperL1Loss(nn.Module):
-    # for 512 resolution
-    def __init__(self, sent_dim, noise_dim, emb_dim, hid_dim, G256_weightspath='', num_resblock=2):
-
-        super(GeneratorSuperL1Loss, self).__init__()
-        self.__dict__.update(locals())
-        print('>> Init a HDGAN 512Generator (resblock={})'.format(num_resblock))
-        
-        norm_layer = functools.partial(nn.BatchNorm2d, affine=True)
-        act_layer = nn.ReLU(True)
-        
-        self.generator_256 = Generator(sent_dim, noise_dim, emb_dim, hid_dim)
-        if G256_weightspath != '':
-            print ('pre-load generator_256 from', G256_weightspath)
-            weights_dict = torch.load(G256_weightspath, map_location=lambda storage, loc: storage)
-            self.generator_256.load_state_dict(weights_dict)
-
-        # puch it to every high dimension
-        scale = 512
-        cur_dim = 64
-        seq = []
-        for i in range(num_resblock):
-            seq += [ResnetBlock(cur_dim)]
-        
-        seq += [nn.Upsample(scale_factor=2, mode='nearest')]
-        seq += [pad_conv_norm(cur_dim, cur_dim//2, norm_layer, activation=act_layer)]
-        cur_dim = cur_dim // 2
-
-        setattr(self, 'scale_%d'%(scale), nn.Sequential(*seq) )
-        setattr(self, 'tensor_to_img_%d'%(scale), branch_out(cur_dim))
-        self.apply(weights_init)
-
-    def parameters(self):
-        
-        fixed = list(self.generator_256.parameters())
-        all_params = list(self.parameters())
-        partial_params = list(set(all_params) - set(fixed))
-
-        print ('WARNING: fixed params {} training params {}'.format(len(fixed), len(partial_params)))
-        print('          It needs modifications if you can train all from scratch')
-        
-        return partial_params
-
-    def forward(self, sent_embeddings, z):
-
-        output_64, output_128, output_256, mean, logsigma = self.generator_256(sent_embeddings, z)
-        scale_256 = self.generator_256.keep_out_256.detach() 
-        scale_512 = self.scale_512(scale_256)
-        up_img_256 = F.upsample(output_256.detach(), (512,512), mode='bilinear')
-
-        output_512 = self.tensor_to_img_512(scale_512)
-
-        # self-regularize the 512 generator
-        pwloss =  F.l1_loss(output_512, up_img_256)
-
-        return output_64, output_128, output_256, output_512, pwloss
 

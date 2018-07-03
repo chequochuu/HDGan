@@ -23,9 +23,9 @@ def to_img_dict_(*inputs, super512=False):
     if type(inputs[0]) == tuple:
         inputs = inputs[0]
     res = {}
-    res['output_64'] = inputs[0]
-    res['output_128'] = inputs[1]
-    res['output_256'] = inputs[2]
+    res['output_16'] = inputs[0]
+    res['output_32'] = inputs[1]
+    res['output_64'] = inputs[2]
     # generator returns different things for 512HDGAN
     if not super512:
         # from Generator
@@ -149,7 +149,7 @@ def train_gans(dataset, model_root, model_name, netG, netD, args):
     lr_plot = plot_scalar(name="lr", env=model_name, rate=args.display_freq)
     kl_loss_plot = plot_scalar(name="kl_loss", env=model_name, rate=args.display_freq)
     
-    all_keys = ["output_64", "output_128", "output_256"]
+    all_keys = ["output_16", "output_32", "output_64"]
     g_plot_dict, d_plot_dict = {}, {}
     for this_key in all_keys:
         g_plot_dict[this_key] = plot_scalar(
@@ -266,7 +266,7 @@ def train_gans(dataset, model_root, model_name, netG, netD, args):
                 kl_loss_val = to_numpy(kl_loss).mean()
                 generator_loss = args.KL_COE * kl_loss
             else:
-                # when trian 512HDGAN. KL loss is fixed since we assume 256HDGAN is trained.
+                # when trian 512HDGAN. KL loss is fixed since we assume 64HDGAN is trained.
                 # mean_var actually returns pixel-wise l1 loss (see paper)
                 generator_loss = mean_var
 

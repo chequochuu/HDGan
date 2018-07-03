@@ -27,7 +27,7 @@ class Dataset(object):
             self.image_filename = '/304images.pickle'
             self.output_res = [64, 128, 256]
             if img_size == 512: self.output_res += [512]
-        elif img_size in [64]:
+        elif img_size in [16,32,64]:
             self.image_filename = '/76images.pickle'
             self.output_res = [64]
         self.embedding_filename = '/char-CNN-RNN-embeddings.pickle'
@@ -97,9 +97,9 @@ class Dataset(object):
         
         transformed_images = np.zeros([images.shape[0], self.imsize, self.imsize, 3])
         ori_size = images.shape[1]
-        # if ori_size < self.imsize:
-        #     ori_size = int(self.imsize * (304/256))
-        #     images = resize_images(images, shape=[ori_size, ori_size])
+        if ori_size != self.imsize:
+            ori_size = self.imsize #int(self.imsize * (304/256))
+            images = resize_images(images, shape=[ori_size, ori_size])
 
         for i in range(images.shape[0]):    
             if self.train_mode:
